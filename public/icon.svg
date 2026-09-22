@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4F8F68"/>
+      <stop offset="100%" style="stop-color:#3A7A52"/>
+    </linearGradient>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#bg)"/>
+  <!-- Plate -->
+  <ellipse cx="256" cy="270" rx="140" ry="110" fill="white" opacity="0.95"/>
+  <ellipse cx="256" cy="270" rx="115" ry="88" fill="none" stroke="#4F8F68" stroke-width="3" opacity="0.4"/>
+  <!-- Fork -->
+  <g transform="translate(195, 100) rotate(-15)">
+    <rect x="4" y="0" width="5" height="120" rx="2.5" fill="white" opacity="0.9"/>
+    <rect x="-6" y="0" width="4" height="50" rx="2" fill="white" opacity="0.9"/>
+    <rect x="2" y="0" width="4" height="50" rx="2" fill="white" opacity="0.9"/>
+    <rect x="10" y="0" width="4" height="50" rx="2" fill="white" opacity="0.9"/>
+  </g>
+  <!-- Knife -->
+  <g transform="translate(310, 105) rotate(15)">
+    <rect x="3" y="0" width="6" height="115" rx="3" fill="white" opacity="0.9"/>
+    <path d="M 6 0 Q 25 20 15 60 L 6 55 Z" fill="white" opacity="0.9"/>
+  </g>
+  <!-- M letter -->
+  <text x="256" y="290" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="60" fill="#4F8F68" opacity="0.15">M</text>
+</svg>

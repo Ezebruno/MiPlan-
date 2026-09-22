@@ -1,0 +1,13 @@
+node_modules/
+.next/
+.env
+.env.local
+*.log
+build_error.txt
+prisma_error.txt
+prisma_output.txt
+tsconfig.tsbuildinfo
+.agents/
+.claude/
+.windsurf/
+skills-lock.json

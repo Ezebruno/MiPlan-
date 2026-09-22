@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// NextAuth models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  accounts      Account[]
+  sessions      Session[]
+  
+  // App specific
+  profile     Profile?
+  dailyStats  DailySummary[]
+  meals       Meal[]
+  weightLogs  WeightLog[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Domain Models
+
+model Profile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  birthDate      DateTime?
+  gender         String?
+  heightCm       Float?
+  currentWeight  Float?
+  targetWeight   Float?
+  goal           String?
+  activityLevel  String?
+  
+  targetCalories Int?
+  targetProtein  Int?
+  targetCarbs    Int?
+  targetFats     Int?
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model DailySummary {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date         DateTime @db.Date
+  
+  totalCalories Int @default(0)
+  totalProtein  Int @default(0)
+  totalCarbs    Int @default(0)
+  totalFats     Int @default(0)
+  waterMl       Int @default(0)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, date])
+}
+
+model Meal {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date         DateTime @db.Date
+  mealType     String   // breakfast, lunch, dinner, snack
+  
+  items        MealItem[]
+  
+  createdAt    DateTime @default(now())
+}
+
+model MealItem {
+  id           String   @id @default(cuid())
+  mealId       String
+  meal         Meal     @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  
+  foodId       String?
+  food         Food?    @relation(fields: [foodId], references: [id], onDelete: SetNull)
+  foodName     String
+  
+  quantity     Float
+  calories     Int
+  protein      Int
+  carbs        Int
+  fats         Int
+}
+
+model Food {
+  id          String   @id @default(cuid())   // We use food name or barcode eventually
+  name        String   @unique
+  brand       String?
+  calories    Float
+  protein     Float
+  carbs       Float
+  fat         Float
+  servingSize String?
+  
+  mealItems   MealItem[]
+  
+  createdAt   DateTime @default(now())
+}
+
+model WeightLog {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date         DateTime @db.Date
+  weight       Float
+  
+  createdAt    DateTime @default(now())
+}
