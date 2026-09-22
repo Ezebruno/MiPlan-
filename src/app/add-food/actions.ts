@@ -1,12 +1,8 @@
 'use server'
 
-import { db } from '@/lib/db'
+import { db, pool } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import pg from 'pg'
-import 'dotenv/config'
-
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL! })
 
 export async function searchFoods(query: string) {
   if (!query || query.length < 2) return []

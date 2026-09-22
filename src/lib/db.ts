@@ -4,11 +4,13 @@ import pg from 'pg'
 
 const connectionString = process.env.DATABASE_URL!
 
-const pool = new pg.Pool({
+export const pool = new pg.Pool({
   connectionString,
+  max: 5,
 })
+
+// Enable unaccent extension (safe to run multiple times)
+pool.query('CREATE EXTENSION IF NOT EXISTS unaccent').catch(() => {})
+
 const adapter = new PrismaPg(pool)
 export const db = new PrismaClient({ adapter })
-
-// Example type to expose the client singleton if needed
-export type DB = typeof db
