@@ -32,6 +32,7 @@ export type DailySummaryAvgAggregateOutputType = {
   totalCarbs: number | null
   totalFats: number | null
   waterMl: number | null
+  exerciseMin: number | null
 }
 
 export type DailySummarySumAggregateOutputType = {
@@ -40,6 +41,7 @@ export type DailySummarySumAggregateOutputType = {
   totalCarbs: number | null
   totalFats: number | null
   waterMl: number | null
+  exerciseMin: number | null
 }
 
 export type DailySummaryMinAggregateOutputType = {
@@ -51,6 +53,7 @@ export type DailySummaryMinAggregateOutputType = {
   totalCarbs: number | null
   totalFats: number | null
   waterMl: number | null
+  exerciseMin: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -64,6 +67,7 @@ export type DailySummaryMaxAggregateOutputType = {
   totalCarbs: number | null
   totalFats: number | null
   waterMl: number | null
+  exerciseMin: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -77,6 +81,7 @@ export type DailySummaryCountAggregateOutputType = {
   totalCarbs: number
   totalFats: number
   waterMl: number
+  exerciseMin: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -89,6 +94,7 @@ export type DailySummaryAvgAggregateInputType = {
   totalCarbs?: true
   totalFats?: true
   waterMl?: true
+  exerciseMin?: true
 }
 
 export type DailySummarySumAggregateInputType = {
@@ -97,6 +103,7 @@ export type DailySummarySumAggregateInputType = {
   totalCarbs?: true
   totalFats?: true
   waterMl?: true
+  exerciseMin?: true
 }
 
 export type DailySummaryMinAggregateInputType = {
@@ -108,6 +115,7 @@ export type DailySummaryMinAggregateInputType = {
   totalCarbs?: true
   totalFats?: true
   waterMl?: true
+  exerciseMin?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -121,6 +129,7 @@ export type DailySummaryMaxAggregateInputType = {
   totalCarbs?: true
   totalFats?: true
   waterMl?: true
+  exerciseMin?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -134,6 +143,7 @@ export type DailySummaryCountAggregateInputType = {
   totalCarbs?: true
   totalFats?: true
   waterMl?: true
+  exerciseMin?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -234,6 +244,7 @@ export type DailySummaryGroupByOutputType = {
   totalCarbs: number
   totalFats: number
   waterMl: number
+  exerciseMin: number
   createdAt: Date
   updatedAt: Date
   _count: DailySummaryCountAggregateOutputType | null
@@ -270,6 +281,7 @@ export type DailySummaryWhereInput = {
   totalCarbs?: Prisma.IntFilter<"DailySummary"> | number
   totalFats?: Prisma.IntFilter<"DailySummary"> | number
   waterMl?: Prisma.IntFilter<"DailySummary"> | number
+  exerciseMin?: Prisma.IntFilter<"DailySummary"> | number
   createdAt?: Prisma.DateTimeFilter<"DailySummary"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DailySummary"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -284,6 +296,7 @@ export type DailySummaryOrderByWithRelationInput = {
   totalCarbs?: Prisma.SortOrder
   totalFats?: Prisma.SortOrder
   waterMl?: Prisma.SortOrder
+  exerciseMin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -302,6 +315,7 @@ export type DailySummaryWhereUniqueInput = Prisma.AtLeast<{
   totalCarbs?: Prisma.IntFilter<"DailySummary"> | number
   totalFats?: Prisma.IntFilter<"DailySummary"> | number
   waterMl?: Prisma.IntFilter<"DailySummary"> | number
+  exerciseMin?: Prisma.IntFilter<"DailySummary"> | number
   createdAt?: Prisma.DateTimeFilter<"DailySummary"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DailySummary"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -316,6 +330,7 @@ export type DailySummaryOrderByWithAggregationInput = {
   totalCarbs?: Prisma.SortOrder
   totalFats?: Prisma.SortOrder
   waterMl?: Prisma.SortOrder
+  exerciseMin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.DailySummaryCountOrderByAggregateInput
@@ -337,6 +352,7 @@ export type DailySummaryScalarWhereWithAggregatesInput = {
   totalCarbs?: Prisma.IntWithAggregatesFilter<"DailySummary"> | number
   totalFats?: Prisma.IntWithAggregatesFilter<"DailySummary"> | number
   waterMl?: Prisma.IntWithAggregatesFilter<"DailySummary"> | number
+  exerciseMin?: Prisma.IntWithAggregatesFilter<"DailySummary"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"DailySummary"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"DailySummary"> | Date | string
 }
@@ -349,6 +365,7 @@ export type DailySummaryCreateInput = {
   totalCarbs?: number
   totalFats?: number
   waterMl?: number
+  exerciseMin?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutDailyStatsInput
@@ -363,6 +380,7 @@ export type DailySummaryUncheckedCreateInput = {
   totalCarbs?: number
   totalFats?: number
   waterMl?: number
+  exerciseMin?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -375,6 +393,7 @@ export type DailySummaryUpdateInput = {
   totalCarbs?: Prisma.IntFieldUpdateOperationsInput | number
   totalFats?: Prisma.IntFieldUpdateOperationsInput | number
   waterMl?: Prisma.IntFieldUpdateOperationsInput | number
+  exerciseMin?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutDailyStatsNestedInput
@@ -389,6 +408,7 @@ export type DailySummaryUncheckedUpdateInput = {
   totalCarbs?: Prisma.IntFieldUpdateOperationsInput | number
   totalFats?: Prisma.IntFieldUpdateOperationsInput | number
   waterMl?: Prisma.IntFieldUpdateOperationsInput | number
+  exerciseMin?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -402,6 +422,7 @@ export type DailySummaryCreateManyInput = {
   totalCarbs?: number
   totalFats?: number
   waterMl?: number
+  exerciseMin?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -414,6 +435,7 @@ export type DailySummaryUpdateManyMutationInput = {
   totalCarbs?: Prisma.IntFieldUpdateOperationsInput | number
   totalFats?: Prisma.IntFieldUpdateOperationsInput | number
   waterMl?: Prisma.IntFieldUpdateOperationsInput | number
+  exerciseMin?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -427,6 +449,7 @@ export type DailySummaryUncheckedUpdateManyInput = {
   totalCarbs?: Prisma.IntFieldUpdateOperationsInput | number
   totalFats?: Prisma.IntFieldUpdateOperationsInput | number
   waterMl?: Prisma.IntFieldUpdateOperationsInput | number
+  exerciseMin?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -455,6 +478,7 @@ export type DailySummaryCountOrderByAggregateInput = {
   totalCarbs?: Prisma.SortOrder
   totalFats?: Prisma.SortOrder
   waterMl?: Prisma.SortOrder
+  exerciseMin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -465,6 +489,7 @@ export type DailySummaryAvgOrderByAggregateInput = {
   totalCarbs?: Prisma.SortOrder
   totalFats?: Prisma.SortOrder
   waterMl?: Prisma.SortOrder
+  exerciseMin?: Prisma.SortOrder
 }
 
 export type DailySummaryMaxOrderByAggregateInput = {
@@ -476,6 +501,7 @@ export type DailySummaryMaxOrderByAggregateInput = {
   totalCarbs?: Prisma.SortOrder
   totalFats?: Prisma.SortOrder
   waterMl?: Prisma.SortOrder
+  exerciseMin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -489,6 +515,7 @@ export type DailySummaryMinOrderByAggregateInput = {
   totalCarbs?: Prisma.SortOrder
   totalFats?: Prisma.SortOrder
   waterMl?: Prisma.SortOrder
+  exerciseMin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -499,6 +526,7 @@ export type DailySummarySumOrderByAggregateInput = {
   totalCarbs?: Prisma.SortOrder
   totalFats?: Prisma.SortOrder
   waterMl?: Prisma.SortOrder
+  exerciseMin?: Prisma.SortOrder
 }
 
 export type DailySummaryCreateNestedManyWithoutUserInput = {
@@ -559,6 +587,7 @@ export type DailySummaryCreateWithoutUserInput = {
   totalCarbs?: number
   totalFats?: number
   waterMl?: number
+  exerciseMin?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -571,6 +600,7 @@ export type DailySummaryUncheckedCreateWithoutUserInput = {
   totalCarbs?: number
   totalFats?: number
   waterMl?: number
+  exerciseMin?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -613,6 +643,7 @@ export type DailySummaryScalarWhereInput = {
   totalCarbs?: Prisma.IntFilter<"DailySummary"> | number
   totalFats?: Prisma.IntFilter<"DailySummary"> | number
   waterMl?: Prisma.IntFilter<"DailySummary"> | number
+  exerciseMin?: Prisma.IntFilter<"DailySummary"> | number
   createdAt?: Prisma.DateTimeFilter<"DailySummary"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DailySummary"> | Date | string
 }
@@ -625,6 +656,7 @@ export type DailySummaryCreateManyUserInput = {
   totalCarbs?: number
   totalFats?: number
   waterMl?: number
+  exerciseMin?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -637,6 +669,7 @@ export type DailySummaryUpdateWithoutUserInput = {
   totalCarbs?: Prisma.IntFieldUpdateOperationsInput | number
   totalFats?: Prisma.IntFieldUpdateOperationsInput | number
   waterMl?: Prisma.IntFieldUpdateOperationsInput | number
+  exerciseMin?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -649,6 +682,7 @@ export type DailySummaryUncheckedUpdateWithoutUserInput = {
   totalCarbs?: Prisma.IntFieldUpdateOperationsInput | number
   totalFats?: Prisma.IntFieldUpdateOperationsInput | number
   waterMl?: Prisma.IntFieldUpdateOperationsInput | number
+  exerciseMin?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -661,6 +695,7 @@ export type DailySummaryUncheckedUpdateManyWithoutUserInput = {
   totalCarbs?: Prisma.IntFieldUpdateOperationsInput | number
   totalFats?: Prisma.IntFieldUpdateOperationsInput | number
   waterMl?: Prisma.IntFieldUpdateOperationsInput | number
+  exerciseMin?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -676,6 +711,7 @@ export type DailySummarySelect<ExtArgs extends runtime.Types.Extensions.Internal
   totalCarbs?: boolean
   totalFats?: boolean
   waterMl?: boolean
+  exerciseMin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -690,6 +726,7 @@ export type DailySummarySelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   totalCarbs?: boolean
   totalFats?: boolean
   waterMl?: boolean
+  exerciseMin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -704,6 +741,7 @@ export type DailySummarySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   totalCarbs?: boolean
   totalFats?: boolean
   waterMl?: boolean
+  exerciseMin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -718,11 +756,12 @@ export type DailySummarySelectScalar = {
   totalCarbs?: boolean
   totalFats?: boolean
   waterMl?: boolean
+  exerciseMin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type DailySummaryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "date" | "totalCalories" | "totalProtein" | "totalCarbs" | "totalFats" | "waterMl" | "createdAt" | "updatedAt", ExtArgs["result"]["dailySummary"]>
+export type DailySummaryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "date" | "totalCalories" | "totalProtein" | "totalCarbs" | "totalFats" | "waterMl" | "exerciseMin" | "createdAt" | "updatedAt", ExtArgs["result"]["dailySummary"]>
 export type DailySummaryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -747,6 +786,7 @@ export type $DailySummaryPayload<ExtArgs extends runtime.Types.Extensions.Intern
     totalCarbs: number
     totalFats: number
     waterMl: number
+    exerciseMin: number
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["dailySummary"]>
@@ -1181,6 +1221,7 @@ export interface DailySummaryFieldRefs {
   readonly totalCarbs: Prisma.FieldRef<"DailySummary", 'Int'>
   readonly totalFats: Prisma.FieldRef<"DailySummary", 'Int'>
   readonly waterMl: Prisma.FieldRef<"DailySummary", 'Int'>
+  readonly exerciseMin: Prisma.FieldRef<"DailySummary", 'Int'>
   readonly createdAt: Prisma.FieldRef<"DailySummary", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"DailySummary", 'DateTime'>
 }

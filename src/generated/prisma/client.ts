@@ -91,3 +91,8 @@ export type Food = Prisma.FoodModel
  * 
  */
 export type WeightLog = Prisma.WeightLogModel
+/**
+ * Model ExerciseLog
+ * 
+ */
+export type ExerciseLog = Prisma.ExerciseLogModel

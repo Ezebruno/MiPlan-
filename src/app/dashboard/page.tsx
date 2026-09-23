@@ -5,6 +5,8 @@ import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import DatePicker from './DatePicker'
 import MealSection from './MealSection'
+import { WaterTracker, ExerciseTracker } from './Trackers'
+import MotivationalModal from './MotivationalModal'
 import { parseLocalDate, toDateStr, addDays, formatLong, todayStr } from '@/lib/dates'
 
 export const MEAL_TYPES = [
@@ -37,7 +39,11 @@ export default async function Dashboard({
       meals: {
         where: { date: { gte: selectedDay, lt: nextDay } },
         include: { items: true }
-      }
+      },
+      exerciseLogs: {
+        where: { date: { gte: selectedDay, lt: nextDay } },
+        orderBy: { createdAt: 'asc' },
+      },
     }
   })
 
@@ -50,10 +56,22 @@ export default async function Dashboard({
   const consumedProtein = todaySummary?.totalProtein ?? 0
   const consumedCarbs = todaySummary?.totalCarbs ?? 0
   const consumedFats = todaySummary?.totalFats ?? 0
+  const waterMl = todaySummary?.waterMl ?? 0
+  const legacyExerciseMin = (todaySummary as any)?.exerciseMin ?? 0
 
   const target = profile.targetCalories || 2000
-  const remaining = Math.max(0, target - consumed)
-  const progressPercent = Math.min(100, Math.round((consumed / target) * 100))
+  const weightKg = profile.currentWeight ?? 70
+  // Quemadas = suma de logs del día (tipo + duración + peso); fallback a dato legacy
+  const loggedKcal = user.exerciseLogs.reduce((s, l) => s + l.kcal, 0)
+  const loggedMin = user.exerciseLogs.reduce((s, l) => s + l.minutes, 0)
+  const burned = loggedKcal > 0 || loggedMin > 0
+    ? loggedKcal
+    : Math.round(legacyExerciseMin * weightKg * 0.1)
+  // Estándar apps nutrición: el ejercicio se suma al presupuesto (eat-back).
+  // Objetivo ajustado = base + quemadas; restantes = ajustado - consumidas.
+  const adjusted = target + burned
+  const remaining = Math.max(0, adjusted - consumed)
+  const progressPercent = Math.min(100, adjusted > 0 ? Math.round((consumed / adjusted) * 100) : 0)
 
   const displayName = (user.name || 'Usuario').replace(/[0-9]/g, '').trim().split(' ')[0]
 
@@ -62,9 +80,9 @@ export default async function Dashboard({
 
   return (
     <main className="screen-container">
+      <MotivationalModal />
       <div style={{ marginBottom: '1rem' }}>
         <h1 className="title" style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>Hola, {displayName} 👋</h1>
-        <p className="subtitle" style={{ fontSize: '1rem', margin: 0 }}>Tu objetivo: {target} kcal diarias</p>
       </div>
 
       {/* SELECTOR DE DÍA / CALENDARIO */}
@@ -97,29 +115,34 @@ export default async function Dashboard({
         </form>
       </div>
 
-      {/* ANILLO DE CALORIAS */}
-      <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem' }}>
-        <div style={{ position: 'relative', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)', position: 'absolute' }}>
-            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-border)" strokeWidth="10" />
-            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-primary)" strokeWidth="10"
-              strokeDasharray="314" strokeDashoffset={314 - (314 * progressPercent) / 100}
-              strokeLinecap="round" />
-          </svg>
-          <div style={{ textAlign: 'center', zIndex: 1 }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-primary)', lineHeight: 1 }}>{remaining}</div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>restantes</div>
+      {/* RESUMEN CALORÍAS: Consumidas · Restantes · Quemadas */}
+      <div className="card" style={{ padding: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'center' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{consumed}</div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>Consumidas</div>
+          </div>
+          <div style={{ position: 'relative', width: '130px', height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="130" height="130" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)', position: 'absolute' }}>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-border)" strokeWidth="10" />
+              <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-primary)" strokeWidth="10"
+                strokeDasharray="314" strokeDashoffset={314 - (314 * progressPercent) / 100}
+                strokeLinecap="round" />
+            </svg>
+            <div style={{ textAlign: 'center', zIndex: 1 }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-primary)', lineHeight: 1 }}>{remaining}</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>Restantes</div>
+            </div>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{burned}</div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>Quemadas</div>
           </div>
         </div>
-        <div style={{ flex: 1, marginLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>OBJETIVO</div>
-            <div style={{ fontSize: '1.125rem', fontWeight: 800 }}>{target} kcal</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>CONSUMIDAS</div>
-            <div style={{ fontSize: '1.125rem', fontWeight: 800 }}>{consumed} kcal</div>
-          </div>
+        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textAlign: 'center', marginTop: '0.75rem' }}>
+          {burned > 0
+            ? `Base ${target} + ${burned} de ejercicio = ${adjusted} kcal`
+            : `Objetivo: ${target} kcal`}
         </div>
       </div>
 
@@ -142,6 +165,10 @@ export default async function Dashboard({
           <MealSection key={id} id={id} label={label} meal={user.meals.find(m => m.mealType === id)} dateStr={dateStr} />
         ))}
       </div>
+
+      {/* AGUA + EJERCICIO */}
+      <WaterTracker initialMl={waterMl} dateStr={dateStr} />
+      <ExerciseTracker logs={user.exerciseLogs} dateStr={dateStr} weightKg={weightKg} />
 
       <div className="bottom-spacer" />
     </main>

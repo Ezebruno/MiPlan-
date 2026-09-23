@@ -14,7 +14,7 @@ export default function Home() {
       
       <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "1rem", paddingBottom: "2rem" }}>
         <Link href="/register" style={{ width: "100%" }}>
-          <button className="btn-secondary">Comenzar</button>
+          <button className="btn-secondary">Crear cuenta</button>
         </Link>
         <Link href="/login" style={{ width: "100%" }}>
           <button style={{ 
@@ -26,7 +26,7 @@ export default function Home() {
             borderRadius: "var(--border-radius-pill)",
             border: "1px solid rgba(255,255,255,0.3)"
           }}>
-            Ya tengo una cuenta
+            Ingresar
           </button>
         </Link>
       </div>

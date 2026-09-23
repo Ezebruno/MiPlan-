@@ -3,13 +3,16 @@
 import { useActionState } from 'react'
 import { loginAction } from './actions'
 import Link from 'next/link'
-import { Mail, Lock } from 'lucide-react'
+import { Mail, Lock, ArrowLeft } from 'lucide-react'
 
 export default function Login() {
   const [state, formAction, isPending] = useActionState(loginAction, null)
 
   return (
-    <main className="screen-container" style={{ justifyContent: 'center' }}>
+    <main className="screen-container" style={{ justifyContent: 'center', position: 'relative' }}>
+      <Link href="/" aria-label="Volver" style={{ position: 'absolute', top: '1rem', left: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+        <ArrowLeft size={20} />
+      </Link>
       <div className="card shadow-lg">
         <h1 className="title" style={{ textAlign: 'center', marginBottom: '0.25rem' }}>Hola de nuevo</h1>
         <p className="subtitle" style={{ textAlign: 'center', marginBottom: '2rem' }}>Iniciá sesión para continuar</p>

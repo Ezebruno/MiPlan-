@@ -59,7 +59,7 @@ export default function Onboarding() {
   }
 
   const handleInput = (key: string, value: any) => {
-    setAnswers({ ...answers, [key]: value })
+    setAnswers((prev: any) => ({ ...prev, [key]: value }))
   }
 
   const handleMultipleChoice = (key: string, value: any, isMultiple: boolean) => {
@@ -245,15 +245,29 @@ export default function Onboarding() {
       )
     }
 
-    // Default target weight
+    // Peso objetivo (opcional): sin fallback para poder borrarlo, + casilla no responder
     if (screen.id === 'target_weight') {
       return (
         <div>
-          <input 
-            type="number" step="0.1" className="input-field"
-            value={answers.targetWeight || answers.currentWeight} 
+          <input
+            type="number" step="0.1" min="20" max="500" className="input-field"
+            value={answers.noTargetWeight ? '' : (answers.targetWeight ?? '')}
+            disabled={answers.noTargetWeight}
+            placeholder={answers.currentWeight ? `Ej: ${answers.currentWeight} kg` : 'Ej: 65 kg'}
             onChange={(e) => handleInput('targetWeight', e.target.value)}
           />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={!!answers.noTargetWeight}
+              onChange={(e) => {
+                handleInput('noTargetWeight', e.target.checked)
+                if (e.target.checked) handleInput('targetWeight', '')
+              }}
+              style={{ width: '18px', height: '18px', accentColor: 'var(--color-primary)' }}
+            />
+            Prefiero no responder
+          </label>
           <p style={{ marginTop: '1rem', color: 'var(--color-text-muted)' }}>
             Las estimaciones son orientativas y no sustituyen el asesoramiento de un profesional de la salud.
           </p>
@@ -385,10 +399,15 @@ export default function Onboarding() {
         {renderContent()}
       </div>
 
-      <div style={{ marginTop: 'auto', paddingTop: '1rem' }}>
+      <div style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <button onClick={handleNext} className="btn-primary" disabled={currentScreen.id === 'goal' && !answers.goal}>
           Continuar
         </button>
+        {step === 0 && (
+          <button onClick={() => router.push('/')} className="btn-secondary">
+            Volver al inicio
+          </button>
+        )}
       </div>
     </main>
   )

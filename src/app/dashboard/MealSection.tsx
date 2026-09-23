@@ -71,7 +71,7 @@ export default function MealSection({ id, label, meal, dateStr }: Props) {
         <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {meal!.items.map(item => (
             <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: 'var(--color-text-muted)', paddingLeft: '0.5rem' }}>
-              <span>· {item.foodName} ({item.quantity}g)</span>
+              <span>· {item.foodName} ({item.quantity === 1 ? '1 porción' : `${item.quantity}g`})</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span style={{ fontWeight: 600 }}>{item.calories} kcal</span>
                 <DeleteItemButton itemId={item.id} date={dateStr} />

@@ -15,6 +15,21 @@
   --border-radius-pill: 9999px;
   --font-sans: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --color-bg: #121614;
+  --color-bg-card: #1C211E;
+  --color-primary: #6BAE85;
+  --color-primary-hover: #5A9C74;
+  --color-secondary: #223227;
+  --color-text: #E9EDE9;
+  --color-text-muted: #9AA39A;
+  --color-border: #2B332D;
+  --color-error: #E57370;
+  --color-success: #6FCF6F;
+  color-scheme: dark;
 }
 
 * {

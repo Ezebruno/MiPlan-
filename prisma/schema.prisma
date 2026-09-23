@@ -50,6 +50,7 @@ model User {
   dailyStats  DailySummary[]
   meals       Meal[]
   weightLogs  WeightLog[]
+  exerciseLogs ExerciseLog[]
 }
 
 model VerificationToken {
@@ -95,6 +96,7 @@ model DailySummary {
   totalCarbs    Int @default(0)
   totalFats     Int @default(0)
   waterMl       Int @default(0)
+  exerciseMin   Int @default(0)
   
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -153,4 +155,16 @@ model WeightLog {
   weight       Float
   
   createdAt    DateTime @default(now())
+}
+
+model ExerciseLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  type      String   @default("other")
+  minutes   Int      @default(0)
+  kcal      Int      @default(0)
+
+  createdAt DateTime @default(now())
 }

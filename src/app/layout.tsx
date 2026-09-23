@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import SWRegister from "@/components/SWRegister";
+import ThemeToggle from "@/components/ThemeToggle";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/icon.svg",
-    apple: "/icon-192.png",
+    apple: "/apple-touch-icon.png",
   },
 };
 
@@ -41,10 +42,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem('miplan-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}`,
+          }}
+        />
         <SWRegister />
         <div id="mobile-wrapper">
+          <ThemeToggle />
           {children}
         </div>
       </body>

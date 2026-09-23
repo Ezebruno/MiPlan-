@@ -3,14 +3,17 @@
 import { useActionState, useEffect } from 'react'
 import { registerAction } from './actions'
 import Link from 'next/link'
-import { User, Mail, Lock } from 'lucide-react'
+import { User, Mail, Lock, ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export default function Register() {
   const [state, formAction, isPending] = useActionState(registerAction, null)
 
   return (
-    <main className="screen-container" style={{ justifyContent: 'center' }}>
+    <main className="screen-container" style={{ justifyContent: 'center', position: 'relative' }}>
+      <Link href="/" aria-label="Volver" style={{ position: 'absolute', top: '1rem', left: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+        <ArrowLeft size={20} />
+      </Link>
       <div className="card shadow-lg" autoFocus>
         <h1 className="title" style={{ textAlign: 'center', marginBottom: '0.25rem' }}>Crear cuenta</h1>
         <p className="subtitle" style={{ textAlign: 'center', marginBottom: '2rem' }}>Construí un plan para vos</p>
@@ -59,7 +62,7 @@ export default function Register() {
           </div>
 
           <button type="submit" className="btn-primary" style={{ marginTop: '1rem' }} disabled={isPending}>
-            {isPending ? 'Creando cuenta...' : 'Comenzar'}
+            {isPending ? 'Creando cuenta...' : 'Crear cuenta'}
           </button>
         </form>
 

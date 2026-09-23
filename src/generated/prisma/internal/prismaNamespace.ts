@@ -406,7 +406,8 @@ export const ModelName = {
   Meal: 'Meal',
   MealItem: 'MealItem',
   Food: 'Food',
-  WeightLog: 'WeightLog'
+  WeightLog: 'WeightLog',
+  ExerciseLog: 'ExerciseLog'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -422,7 +423,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "account" | "session" | "user" | "verificationToken" | "profile" | "dailySummary" | "meal" | "mealItem" | "food" | "weightLog"
+    modelProps: "account" | "session" | "user" | "verificationToken" | "profile" | "dailySummary" | "meal" | "mealItem" | "food" | "weightLog" | "exerciseLog"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1166,6 +1167,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ExerciseLog: {
+      payload: Prisma.$ExerciseLogPayload<ExtArgs>
+      fields: Prisma.ExerciseLogFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ExerciseLogFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExerciseLogPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ExerciseLogFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExerciseLogPayload>
+        }
+        findFirst: {
+          args: Prisma.ExerciseLogFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExerciseLogPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ExerciseLogFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExerciseLogPayload>
+        }
+        findMany: {
+          args: Prisma.ExerciseLogFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExerciseLogPayload>[]
+        }
+        create: {
+          args: Prisma.ExerciseLogCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExerciseLogPayload>
+        }
+        createMany: {
+          args: Prisma.ExerciseLogCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ExerciseLogCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExerciseLogPayload>[]
+        }
+        delete: {
+          args: Prisma.ExerciseLogDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExerciseLogPayload>
+        }
+        update: {
+          args: Prisma.ExerciseLogUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExerciseLogPayload>
+        }
+        deleteMany: {
+          args: Prisma.ExerciseLogDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ExerciseLogUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ExerciseLogUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExerciseLogPayload>[]
+        }
+        upsert: {
+          args: Prisma.ExerciseLogUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExerciseLogPayload>
+        }
+        aggregate: {
+          args: Prisma.ExerciseLogAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateExerciseLog>
+        }
+        groupBy: {
+          args: Prisma.ExerciseLogGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ExerciseLogGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ExerciseLogCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ExerciseLogCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1284,6 +1359,7 @@ export const DailySummaryScalarFieldEnum = {
   totalCarbs: 'totalCarbs',
   totalFats: 'totalFats',
   waterMl: 'waterMl',
+  exerciseMin: 'exerciseMin',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1341,6 +1417,19 @@ export const WeightLogScalarFieldEnum = {
 } as const
 
 export type WeightLogScalarFieldEnum = (typeof WeightLogScalarFieldEnum)[keyof typeof WeightLogScalarFieldEnum]
+
+
+export const ExerciseLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  date: 'date',
+  type: 'type',
+  minutes: 'minutes',
+  kcal: 'kcal',
+  createdAt: 'createdAt'
+} as const
+
+export type ExerciseLogScalarFieldEnum = (typeof ExerciseLogScalarFieldEnum)[keyof typeof ExerciseLogScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1589,6 +1678,7 @@ export type GlobalOmitConfig = {
   mealItem?: Prisma.MealItemOmit
   food?: Prisma.FoodOmit
   weightLog?: Prisma.WeightLogOmit
+  exerciseLog?: Prisma.ExerciseLogOmit
 }
 
 /* Types for Logging */
