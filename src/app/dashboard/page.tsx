@@ -91,28 +91,32 @@ export default async function Dashboard({
           style={{ padding: '0.5rem', color: 'var(--color-primary)' }}>
           <ChevronLeft size={22} />
         </Link>
-        <div style={{ flex: 1, textAlign: 'center' }}>
-          <div style={{ fontWeight: 800, textTransform: 'capitalize' }}>
-            {isToday ? 'Hoy' : formatLong(selectedDay)}
-          </div>
-          {isToday && (
-            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'capitalize' }}>
-              {formatLong(selectedDay)}
+        <DatePicker
+          current={dateStr}
+          trigger={
+            <div style={{ flex: 1, textAlign: 'center' }}>
+              <div style={{ fontWeight: 800, textTransform: 'capitalize' }}>
+                {isToday ? 'Hoy' : formatLong(selectedDay)}
+              </div>
+              {isToday && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'capitalize' }}>
+                  {formatLong(selectedDay)}
+                </div>
+              )}
+              {!isToday && (
+                <span onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+                  <Link href="/dashboard" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary)' }}>
+                    Volver a hoy
+                  </Link>
+                </span>
+              )}
             </div>
-          )}
-          {!isToday && (
-            <Link href="/dashboard" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary)' }}>
-              Volver a hoy
-            </Link>
-          )}
-        </div>
+          }
+        />
         <Link href={`/dashboard?date=${nextStr}`} aria-label="Día siguiente"
           style={{ padding: '0.5rem', color: 'var(--color-primary)' }}>
           <ChevronRight size={22} />
         </Link>
-        <form action="/dashboard" method="get" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-          <DatePicker current={dateStr} />
-        </form>
       </div>
 
       {/* RESUMEN CALORÍAS: Consumidas · Restantes · Quemadas */}

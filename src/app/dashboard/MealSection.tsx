@@ -39,32 +39,30 @@ export default function MealSection({ id, label, meal, dateStr }: Props) {
   return (
     <div style={{ padding: '0.75rem 0', borderBottom: '1px solid var(--color-border)' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
         <div
           onClick={() => hasItems && setOpen(!open)}
-          style={{ cursor: hasItems ? 'pointer' : 'default', flex: 1 }}
+          style={{ cursor: hasItems ? 'pointer' : 'default', flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '0.35rem' }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            {hasItems && (
-              open ? <ChevronDown size={16} color="var(--color-text-muted)" /> : <ChevronRight size={16} color="var(--color-text-muted)" />
-            )}
-            <span style={{ fontWeight: 600 }}>{label}</span>
-          </div>
-          {mealCalories > 0 && (
-            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.15rem', paddingLeft: hasItems ? '1.4rem' : 0 }}>
-              {mealCalories} kcal · {mealProtein}g proteína · {mealCarbs}g carbos · {mealFats}g grasa
-            </div>
+          {hasItems && (
+            open ? <ChevronDown size={16} color="var(--color-text-muted)" /> : <ChevronRight size={16} color="var(--color-text-muted)" />
           )}
+          <span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{label}</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <Link href={`/add-food?meal=${id}&date=${dateStr}`} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.875rem', flexShrink: 0 }}>
+          <Plus size={16} /> Agregar
+        </Link>
+      </div>
+      {mealCalories > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.15rem' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', flex: 1, minWidth: 0 }}>
+            {mealCalories} kcal · {mealProtein}g proteína · {mealCarbs}g carbos · {mealFats}g grasa
+          </div>
           {hasItems && (
             <DeleteMealButton mealId={meal!.id} mealType={id} date={dateStr} />
           )}
-          <Link href={`/add-food?meal=${id}&date=${dateStr}`} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.875rem' }}>
-            <Plus size={16} /> Agregar
-          </Link>
         </div>
-      </div>
+      )}
 
       {/* Items (colapsable) */}
       {open && hasItems && (

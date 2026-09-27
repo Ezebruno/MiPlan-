@@ -28,7 +28,7 @@ function AddFoodContent() {
   const [qty, setQty] = useState(100)
   const [portions, setPortions] = useState(1)
   const [isPending, startTransition] = useTransition()
-  const [added, setAdded] = useState(false)
+  const [added, setAdded] = useState<string | null>(null)
 
   useEffect(() => {
     getPopularFoods().then(setResults)
@@ -66,6 +66,7 @@ function AddFoodContent() {
 
   const handleAdd = () => {
     if (!selected) return
+    const name = selected.name
     startTransition(async () => {
       await logFood({
         date: entryDate,
@@ -77,8 +78,10 @@ function AddFoodContent() {
         carbs: Math.round(selected.carbs * totalGrams / servingGrams),
         fats: Math.round(selected.fat * totalGrams / servingGrams),
       })
-      setAdded(true)
-      setTimeout(() => router.push(`/dashboard?date=${entryDate}`), 1200)
+      setAdded(name)
+      setSelected(null)
+      setPortions(1)
+      setTimeout(() => setAdded(null), 2500)
     })
   }
 
@@ -87,27 +90,41 @@ function AddFoodContent() {
   }
 
   return (
-    <main className="screen-container">
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-        <button onClick={() => router.back()} style={{ padding: '0.5rem' }}><ArrowLeft size={24} /></button>
-        <div>
-          <h1 className="title" style={{ fontSize: '1.25rem', margin: 0 }}>Agregar Alimento</h1>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', margin: 0 }}>{mealLabel[mealType] || mealType}</p>
+    <main className="screen-container" style={{ paddingTop: 0 }}>
+      {/* Header + buscador fijos */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 30, backgroundColor: 'var(--color-bg)', paddingTop: '1.5rem', paddingBottom: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+          <button onClick={() => router.back()} style={{ padding: '0.5rem' }}><ArrowLeft size={24} /></button>
+          <div>
+            <h1 className="title" style={{ fontSize: '1.25rem', margin: 0 }}>Agregar Alimento</h1>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', margin: 0 }}>{mealLabel[mealType] || mealType}</p>
+          </div>
+        </div>
+
+        <div style={{ position: 'relative' }}>
+          <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+          <input
+            type="text" value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Buscar... ej. Banana, Huevo, Pollo"
+            className="input-field" style={{ paddingLeft: '3rem' }}
+            autoFocus
+          />
         </div>
       </div>
 
-      {/* Search */}
-      <div style={{ position: 'relative', marginBottom: '1.25rem' }}>
-        <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
-        <input
-          type="text" value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Buscar... ej. Banana, Huevo, Pollo"
-          className="input-field" style={{ paddingLeft: '3rem' }}
-          autoFocus
-        />
-      </div>
+      <div style={{ paddingTop: '0.75rem' }} />
+
+      {/* Confirmación: sigue en el buscador para agregar más */}
+      {added && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-secondary)', color: 'var(--color-primary)', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem 1rem', borderRadius: '12px', marginBottom: '1rem' }}>
+          <Check size={18} />
+          <span style={{ flex: 1 }}>{added} agregado al {mealLabel[mealType]}</span>
+          <button onClick={() => router.push(`/dashboard?date=${entryDate}`)} style={{ fontWeight: 700, textDecoration: 'underline', color: 'var(--color-primary)' }}>
+            Ver mi día
+          </button>
+        </div>
+      )}
 
       {/* Results */}
       {loading && <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>Buscando...</div>}
@@ -194,8 +211,8 @@ function AddFoodContent() {
             </div>
           </div>
 
-          <button onClick={handleAdd} className="btn-primary" disabled={isPending || added}>
-            {added ? <><Check size={20} /> Agregado</> : isPending ? 'Guardando...' : <><Plus size={20} /> Agregar al {mealLabel[mealType]}</>}
+          <button onClick={handleAdd} className="btn-primary" disabled={isPending}>
+            {isPending ? 'Guardando...' : <><Plus size={20} /> Agregar al {mealLabel[mealType]}</>}
           </button>
         </div>
       )}

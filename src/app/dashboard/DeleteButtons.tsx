@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { X } from 'lucide-react'
+import { X, Trash2 } from 'lucide-react'
 import { deleteMealItemDirect, deleteMealDirect } from './deleteActions'
 
 export function DeleteItemButton({ itemId, date }: { itemId: string; date: string }) {
@@ -90,9 +90,9 @@ export function DeleteMealButton({ mealId, mealType, date }: { mealId: string; m
     <button
       onClick={() => setState('confirm')}
       title={`Eliminar todo el ${labels[mealType] || mealType}`}
-      style={{ color: 'var(--color-error)', fontSize: '0.75rem', fontWeight: 700, opacity: 0.5, flexShrink: 0 }}
+      style={{ color: 'var(--color-error)', opacity: 0.55, padding: '2px', flexShrink: 0, display: 'flex' }}
     >
-      Borrar
+      <Trash2 size={15} />
     </button>
   )
 }

@@ -3,6 +3,14 @@ import { db } from '@/lib/db'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
+const MEAL_LABELS: Record<string, string> = {
+  breakfast: 'Desayuno',
+  lunch: 'Almuerzo',
+  snack: 'Merienda',
+  dinner: 'Cena',
+  other: 'Otro',
+}
+
 export default async function LogPage() {
   const session = await getSession()
   if (!session?.userId) redirect('/login')
@@ -27,10 +35,10 @@ export default async function LogPage() {
       )}
       {meals.map(m => (
         <div key={m.id} className="card">
-          <div style={{ fontWeight: 700, marginBottom: '0.5rem', textTransform: 'capitalize' }}>{m.mealType} · {m.items.reduce((s, i) => s + i.calories, 0)} kcal</div>
+          <div style={{ fontWeight: 700, marginBottom: '0.5rem', textTransform: 'capitalize' }}>{MEAL_LABELS[m.mealType] ?? m.mealType} · {m.items.reduce((s, i) => s + i.calories, 0)} kcal</div>
           {m.items.map(i => (
             <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', padding: '0.4rem 0', borderTop: '1px solid var(--color-border)' }}>
-              <span>{i.foodName} ({i.quantity}g)</span>
+              <span>{i.foodName} ({i.quantity === 1 ? '1 porción' : `${i.quantity}g`})</span>
               <b>{i.calories} kcal</b>
             </div>
           ))}

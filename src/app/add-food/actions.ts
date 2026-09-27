@@ -3,12 +3,16 @@
 import { db, pool } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 
 export async function searchFoods(query: string) {
   if (!query || query.length < 2) return []
   const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2)
   if (words.length === 0) return []
-  const conditions = words.map(w => `(unaccent(lower(f."name")) LIKE '%${w}%' OR unaccent(lower(f."brand")) LIKE '%${w}%')`)
+  // Estricto: solo nombres que EMPIEZAN con lo buscado.
+  // "pan" → Pan integral; no Empanadas, ni Budín de pan, ni marcas como Panadería.
+  const esc = (w: string) => w.replace(/'/g, "''").replace(/[%_\\]/g, '\\$&')
+  const conditions = words.map(w => `(unaccent(lower(f."name")) LIKE '${esc(w)}%' ESCAPE '\\')`)
   const where = conditions.join(' AND ')
   const { rows } = await pool.query(
     `SELECT f.* FROM "Food" f WHERE ${where} ORDER BY f."name" LIMIT 25`
@@ -79,4 +83,7 @@ export async function logFood(data: {
       totalFats: data.fats,
     }
   })
+
+  // Invalida el caché del dashboard para que al volver se vean los datos frescos
+  revalidatePath('/dashboard', 'page')
 }
