@@ -2,7 +2,8 @@
 
 import { Suspense, useState, useEffect, useTransition } from 'react'
 import { searchFoods, getPopularFoods, logFood } from './actions'
-import { ArrowLeft, Search, Plus, Check } from 'lucide-react'
+import BarcodeScanner, { ScannedProduct } from './BarcodeScanner'
+import { ArrowLeft, Search, Plus, Check, ScanBarcode } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { todayStr } from '@/lib/dates'
 
@@ -29,6 +30,7 @@ function AddFoodContent() {
   const [portions, setPortions] = useState(1)
   const [isPending, startTransition] = useTransition()
   const [added, setAdded] = useState<string | null>(null)
+  const [showScanner, setShowScanner] = useState(false)
 
   useEffect(() => {
     getPopularFoods().then(setResults)
@@ -101,17 +103,40 @@ function AddFoodContent() {
           </div>
         </div>
 
-        <div style={{ position: 'relative' }}>
-          <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
-          <input
-            type="text" value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Buscar... ej. Banana, Huevo, Pollo"
-            className="input-field" style={{ paddingLeft: '3rem' }}
-            autoFocus
-          />
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+            <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+            <input
+              type="text" value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Buscar... ej. Banana, Huevo, Pollo"
+              className="input-field" style={{ paddingLeft: '3rem' }}
+              autoFocus
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowScanner(true)}
+            aria-label="Escanear código de barras"
+            title="Escanear código de barras"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '52px', flexShrink: 0, borderRadius: '16px', backgroundColor: 'var(--color-primary)', color: '#fff' }}
+          >
+            <ScanBarcode size={22} />
+          </button>
         </div>
       </div>
+
+      {showScanner && (
+        <BarcodeScanner
+          onClose={() => setShowScanner(false)}
+          onFound={(p: ScannedProduct) => {
+            setShowScanner(false)
+            setSelected({ id: `off-${p.barcode}`, ...p })
+            setQty(parseServingGrams(p.servingSize))
+            setPortions(1)
+          }}
+        />
+      )}
 
       <div style={{ paddingTop: '0.75rem' }} />
 
