@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { X, Zap, ZapOff } from 'lucide-react'
+import { X, Zap, ZapOff, Camera } from 'lucide-react'
 
 export interface ScannedProduct {
   barcode: string
@@ -102,6 +102,7 @@ export default function BarcodeScanner({
   const streamRef = useRef<MediaStream | null>(null)
   const readerRef = useRef<any>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const handleCodeRef = useRef<(code: string) => Promise<void>>(async () => {})
   const handledRef = useRef(false)
   const doneRef = useRef(false)
   const onFoundRef = useRef(onFound)
@@ -136,8 +137,7 @@ export default function BarcodeScanner({
       streamRef.current = null
     }
 
-    const handleCode = async (code: string) => {
-      if (handledRef.current || doneRef.current || !code) return
+    const handleCode = async (code: string) => {      if (handledRef.current || doneRef.current || !code) return
       handledRef.current = true
       setLooking(code)
       setManualCode(null)
@@ -154,6 +154,7 @@ export default function BarcodeScanner({
         handledRef.current = false
       }
     }
+    handleCodeRef.current = handleCode
 
     ;(async () => {
       try {
@@ -212,8 +213,25 @@ export default function BarcodeScanner({
         // 2) Respaldo ZXing (iPhone y otros)
         setEngine('zxing')
         const { BrowserMultiFormatReader } = await import('@zxing/browser')
+        const { DecodeHintType, BarcodeFormat } = await import('@zxing/library')
         if (cancelled || doneRef.current) return
-        const reader = new BrowserMultiFormatReader()
+        // Foco continuo (si el dispositivo lo soporta)
+        try {
+          await streamRef.current?.getVideoTracks()[0]?.applyConstraints({
+            advanced: [{ focusMode: 'continuous' } as any],
+          })
+        } catch { /* noop */ }
+        const hints = new Map()
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+          BarcodeFormat.EAN_13,
+          BarcodeFormat.EAN_8,
+          BarcodeFormat.UPC_A,
+          BarcodeFormat.UPC_E,
+          BarcodeFormat.CODE_128,
+          BarcodeFormat.ITF,
+        ])
+        hints.set(DecodeHintType.TRY_HARDER, true)
+        const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 400 })
         readerRef.current = reader
         await reader.decodeFromVideoDevice(undefined, video, (result: any) => {
           if (result) handleCode(result.getText())
@@ -244,6 +262,43 @@ export default function BarcodeScanner({
     } catch { /* sin linterna */ }
   }
 
+  // Captura fija en alta resolución y la analiza a fondo (para códigos difíciles)
+  const captureAndDecode = async () => {
+    if (handledRef.current) return
+    const video = videoRef.current
+    if (!video?.videoWidth) return
+    setLooking('foto…')
+    try {
+      const { BrowserMultiFormatReader } = await import('@zxing/browser')
+      const { DecodeHintType, BarcodeFormat } = await import('@zxing/library')
+      const canvas = document.createElement('canvas')
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      canvas.getContext('2d')?.drawImage(video, 0, 0)
+      const hints = new Map()
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.ITF,
+      ])
+      hints.set(DecodeHintType.TRY_HARDER, true)
+      const reader = new BrowserMultiFormatReader(hints)
+      const result = await reader.decodeFromCanvas(canvas)
+      await handleCodeRef.current(result.getText())
+    } catch {
+      setLooking(null)
+      handledRef.current = false
+      setNotFound(true)
+      setManualCode(null)
+      setTimeout(() => {
+        if (!doneRef.current) setNotFound(false)
+      }, 2500)
+    }
+  }
+
   return (
     <div
       style={{
@@ -255,6 +310,9 @@ export default function BarcodeScanner({
     >
       <div style={{ width: '100%', maxWidth: '480px', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
         <div style={{ flex: 1, color: '#fff', fontWeight: 800 }}>Apuntá al código de barras</div>
+        <button onClick={captureAndDecode} aria-label="Capturar foto del código" title="Capturar y analizar" style={{ color: '#fff', padding: '0.5rem', display: 'flex' }}>
+          <Camera size={22} />
+        </button>
         <button onClick={toggleTorch} aria-label="Linterna" style={{ color: '#fff', padding: '0.5rem', display: 'flex' }}>
           {torch ? <ZapOff size={22} /> : <Zap size={22} />}
         </button>
