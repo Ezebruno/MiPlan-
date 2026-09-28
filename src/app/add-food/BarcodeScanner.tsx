@@ -118,6 +118,9 @@ export default function BarcodeScanner({
 
   useEffect(() => {
     let cancelled = false
+    // Los refs persisten entre remontajes (StrictMode): resetear estado del ciclo anterior
+    doneRef.current = false
+    handledRef.current = false
 
     const cleanup = () => {
       doneRef.current = true
