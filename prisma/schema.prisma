@@ -136,6 +136,7 @@ model Food {
   id          String   @id @default(cuid())   // We use food name or barcode eventually
   name        String   @unique
   brand       String?
+  barcode     String?  @unique
   calories    Float
   protein     Float
   carbs       Float

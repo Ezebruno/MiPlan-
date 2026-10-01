@@ -197,6 +197,7 @@ export const FoodScalarFieldEnum = {
   id: 'id',
   name: 'name',
   brand: 'brand',
+  barcode: 'barcode',
   calories: 'calories',
   protein: 'protein',
   carbs: 'carbs',

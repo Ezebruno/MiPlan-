@@ -16,6 +16,24 @@ export interface ScannedProduct {
 }
 
 async function lookupBarcode(barcode: string): Promise<ScannedProduct | null> {
+  const { findFoodByBarcode, saveScannedFood } = await import('./actions')
+  // 1) Nuestra base primero (instantáneo, sin internet)
+  try {
+    const local = await findFoodByBarcode(barcode)
+    if (local) {
+      return {
+        barcode,
+        name: local.name,
+        brand: local.brand ?? 'Escaneado',
+        servingSize: local.servingSize ?? '100g',
+        calories: Math.round(local.calories),
+        protein: local.protein,
+        carbs: local.carbs,
+        fat: local.fat,
+      }
+    }
+  } catch { /* sigue a Open Food Facts */ }
+  // 2) Open Food Facts
   const res = await fetch(
     `https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=product_name,brands,quantity,nutriments,image_front_small_url`
   )
@@ -24,7 +42,7 @@ async function lookupBarcode(barcode: string): Promise<ScannedProduct | null> {
   if (data.status !== 1 || !data.product) return null
   const p = data.product
   const n = p.nutriments ?? {}
-  return {
+  const product: ScannedProduct = {
     barcode,
     name: p.product_name || `Producto ${barcode}`,
     brand: p.brands || 'Escaneado',
@@ -35,6 +53,18 @@ async function lookupBarcode(barcode: string): Promise<ScannedProduct | null> {
     fat: Number(n.fat_100g ?? n.fat ?? 0),
     image: p.image_front_small_url,
   }
+  // 3) Lo guarda en nuestra base para la próxima (no bloquea)
+  saveScannedFood({
+    barcode: product.barcode,
+    name: product.name,
+    brand: product.brand,
+    servingSize: product.servingSize,
+    calories: product.calories,
+    protein: product.protein,
+    carbs: product.carbs,
+    fats: product.fat,
+  }).catch(() => {})
+  return product
 }
 
 const NATIVE_FORMATS = [
@@ -44,13 +74,13 @@ const NATIVE_FORMATS = [
 function ManualProductForm({ code, onSubmit }: { code: string; onSubmit: (p: ScannedProduct) => void }) {
   return (
     <form
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault()
         const fd = new FormData(e.currentTarget)
         const str = (k: string) => fd.get(k)?.toString().trim() || ''
         const num = (k: string) => Number(fd.get(k)) || 0
         const grams = num('grams') || 100
-        onSubmit({
+        const product: ScannedProduct = {
           barcode: code,
           name: str('name') || `Producto ${code}`,
           brand: 'Manual',
@@ -59,7 +89,22 @@ function ManualProductForm({ code, onSubmit }: { code: string; onSubmit: (p: Sca
           protein: num('protein'),
           carbs: num('carbs'),
           fat: num('fat'),
-        })
+        }
+        // Se guarda en nuestra base para encontrarlo la próxima vez
+        try {
+          const { saveScannedFood } = await import('./actions')
+          await saveScannedFood({
+            barcode: product.barcode,
+            name: product.name,
+            brand: product.brand,
+            servingSize: product.servingSize,
+            calories: product.calories,
+            protein: product.protein,
+            carbs: product.carbs,
+            fats: product.fat,
+          })
+        } catch { /* sigue igual al diario */ }
+        onSubmit(product)
       }}
       style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%', maxWidth: '480px', marginTop: '0.75rem', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0.9rem' }}
     >

@@ -24,6 +24,48 @@ export async function getPopularFoods() {
   return await db.food.findMany({ take: 12, orderBy: { name: 'asc' } })
 }
 
+export async function findFoodByBarcode(barcode: string) {
+  const code = barcode.trim()
+  if (!code) return null
+  return await db.food.findUnique({ where: { barcode: code } })
+}
+
+export async function saveScannedFood(data: {
+  barcode: string
+  name: string
+  brand?: string
+  servingSize: string
+  calories: number
+  protein: number
+  carbs: number
+  fats: number
+}) {
+  const code = data.barcode.trim()
+  if (!code) return null
+  return await db.food.upsert({
+    where: { barcode: code },
+    update: {
+      name: data.name,
+      brand: data.brand ?? 'Escaneado',
+      servingSize: data.servingSize,
+      calories: data.calories,
+      protein: data.protein,
+      carbs: data.carbs,
+      fat: data.fats,
+    },
+    create: {
+      barcode: code,
+      name: data.name,
+      brand: data.brand ?? 'Escaneado',
+      servingSize: data.servingSize,
+      calories: data.calories,
+      protein: data.protein,
+      carbs: data.carbs,
+      fat: data.fats,
+    },
+  })
+}
+
 export async function logFood(data: {
   date: string
   mealType: string
