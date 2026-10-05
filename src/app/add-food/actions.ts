@@ -24,6 +24,29 @@ export async function getPopularFoods() {
   return await db.food.findMany({ take: 12, orderBy: { name: 'asc' } })
 }
 
+export async function getFoodsByNames(names: string[]) {
+  if (names.length === 0) return []
+  const foods = await db.food.findMany({ where: { name: { in: names } } })
+  const order = new Map(names.map((n, i) => [n, i]))
+  return foods.sort((a, b) => (order.get(a.name) ?? 99) - (order.get(b.name) ?? 99))
+}
+
+// Los más registrados por todos (se usa como "favoritos"/frecuentes)
+export async function getFavoriteFoods(limit = 8) {
+  const top: { foodName: string }[] = await db.$queryRaw`
+    SELECT mi."foodName" AS "foodName"
+    FROM "MealItem" mi
+    GROUP BY mi."foodName"
+    ORDER BY COUNT(*) DESC
+    LIMIT ${limit}
+  `
+  if (top.length === 0) return await getPopularFoods()
+  const names = top.map((t) => t.foodName)
+  const foods = await db.food.findMany({ where: { name: { in: names } } })
+  const byName = new Map(foods.map((f) => [f.name, f]))
+  return names.flatMap((n) => (byName.get(n) ? [byName.get(n)!] : []))
+}
+
 export async function findFoodByBarcode(barcode: string) {
   const code = barcode.trim()
   if (!code) return null

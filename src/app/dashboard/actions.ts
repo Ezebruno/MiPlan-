@@ -2,6 +2,7 @@
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { parseLocalDate, toDateStr } from '@/lib/dates'
 
 function todayStart() {
@@ -70,4 +71,79 @@ export async function logWeight(weight: number, dateStr?: string) {
     data: { currentWeight: weight },
   })
   redirect(back)
+}
+
+async function copyItemsToDate(userId: string, fromDate: Date, toDate: Date, mealType?: string) {
+  const nextDay = new Date(fromDate)
+  nextDay.setDate(nextDay.getDate() + 1)
+  const sourceMeals = await db.meal.findMany({
+    where: {
+      userId,
+      date: { gte: fromDate, lt: nextDay },
+      ...(mealType ? { mealType } : {}),
+    },
+    include: { items: true },
+  })
+  let copied = 0
+  for (const meal of sourceMeals) {
+    if (meal.items.length === 0) continue
+    let target = await db.meal.findFirst({ where: { userId, mealType: meal.mealType, date: toDate } })
+    if (!target) {
+      target = await db.meal.create({ data: { userId, date: toDate, mealType: meal.mealType } })
+    }
+    for (const item of meal.items) {
+      await db.mealItem.create({
+        data: {
+          mealId: target.id,
+          foodId: item.foodId,
+          foodName: item.foodName,
+          quantity: item.quantity,
+          calories: item.calories,
+          protein: item.protein,
+          carbs: item.carbs,
+          fats: item.fats,
+        },
+      })
+      copied++
+    }
+    const sums = meal.items.reduce(
+      (s, i) => ({ kcal: s.kcal + i.calories, p: s.p + i.protein, c: s.c + i.carbs, f: s.f + i.fats }),
+      { kcal: 0, p: 0, c: 0, f: 0 }
+    )
+    await db.dailySummary.upsert({
+      where: { userId_date: { userId, date: toDate } },
+      update: {
+        totalCalories: { increment: sums.kcal },
+        totalProtein: { increment: sums.p },
+        totalCarbs: { increment: sums.c },
+        totalFats: { increment: sums.f },
+      },
+      create: {
+        userId,
+        date: toDate,
+        totalCalories: sums.kcal,
+        totalProtein: sums.p,
+        totalCarbs: sums.c,
+        totalFats: sums.f,
+      },
+    })
+  }
+  return copied
+}
+
+// Repite una comida (o todo el día) de otra fecha en la fecha destino
+export async function repeatMeal(fromDateStr: string, mealType: string, toDateStr: string) {
+  const session = await getSession()
+  if (!session?.userId) redirect('/login')
+  const copied = await copyItemsToDate(session.userId, parseLocalDate(fromDateStr), parseLocalDate(toDateStr), mealType)
+  revalidatePath('/dashboard')
+  return copied
+}
+
+export async function repeatDay(fromDateStr: string, toDateStr: string) {
+  const session = await getSession()
+  if (!session?.userId) redirect('/login')
+  const copied = await copyItemsToDate(session.userId, parseLocalDate(fromDateStr), parseLocalDate(toDateStr))
+  revalidatePath('/dashboard')
+  return copied
 }

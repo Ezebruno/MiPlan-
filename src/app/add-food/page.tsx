@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, useState, useEffect, useTransition } from 'react'
-import { searchFoods, getPopularFoods, logFood } from './actions'
+import { searchFoods, getPopularFoods, getFoodsByNames, getFavoriteFoods, logFood } from './actions'
 import BarcodeScanner, { ScannedProduct } from './BarcodeScanner'
 import { ArrowLeft, Search, Plus, Check, ScanBarcode } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -24,6 +24,9 @@ function AddFoodContent() {
 
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<any[]>([])
+  const [favorites, setFavorites] = useState<any[]>([])
+  const [clasicos, setClasicos] = useState<any[]>([])
+  const [fromScan, setFromScan] = useState(false)
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState<any | null>(null)
   const [qty, setQty] = useState(100)
@@ -34,6 +37,8 @@ function AddFoodContent() {
 
   useEffect(() => {
     getPopularFoods().then(setResults)
+    getFavoriteFoods().then(setFavorites)
+    getFoodsByNames(['Mate', 'Asado de tira cocido', 'Milanesa de carne vacuna al horno', 'Empanada de carne', 'Milanesa de berenjena', 'Locro', 'Choripán', 'Dulce de leche']).then(setClasicos)
   }, [])
 
   useEffect(() => {
@@ -87,6 +92,29 @@ function AddFoodContent() {
     })
   }
 
+  // Registro en un paso (viene del escáner): 1 porción directo al diario
+  const handleQuickAdd = () => {
+    if (!selected) return
+    const name = selected.name
+    startTransition(async () => {
+      await logFood({
+        date: entryDate,
+        mealType,
+        foodName: selected.name,
+        quantity: servingGrams,
+        calories: Math.round(selected.calories),
+        protein: Math.round(selected.protein),
+        carbs: Math.round(selected.carbs),
+        fats: Math.round(selected.fat),
+      })
+      setAdded(name)
+      setSelected(null)
+      setFromScan(false)
+      setPortions(1)
+      setTimeout(() => setAdded(null), 2500)
+    })
+  }
+
   const mealLabel: Record<string, string> = {
     breakfast: 'Desayuno', lunch: 'Almuerzo', snack: 'Merienda', dinner: 'Cena', other: 'Otro'
   }
@@ -134,6 +162,7 @@ function AddFoodContent() {
             setSelected({ id: `off-${p.barcode}`, ...p })
             setQty(parseServingGrams(p.servingSize))
             setPortions(1)
+            setFromScan(true)
           }}
         />
       )}
@@ -157,9 +186,41 @@ function AddFoodContent() {
         <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>Sin resultados para "{query}"</div>
       )}
 
+      {/* Tus frecuentes + clásicos (solo sin búsqueda) */}
+      {query === '' && !loading && (
+        <>
+          {favorites.length > 0 && (
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: '0.5rem' }}>Tus frecuentes</div>
+              <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
+                {favorites.map(food => (
+                  <button key={food.id} onClick={() => { setSelected(food); setQty(parseServingGrams(food.servingSize)); setPortions(1); setFromScan(false) }}
+                    style={{ flexShrink: 0, padding: '0.6rem 0.9rem', borderRadius: '999px', backgroundColor: 'var(--color-secondary)', color: 'var(--color-primary)', fontWeight: 700, fontSize: '0.85rem' }}>
+                    {food.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {clasicos.length > 0 && (
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: '0.5rem' }}>Clásicos argentinos 🇦🇷</div>
+              <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
+                {clasicos.map(food => (
+                  <button key={food.id} onClick={() => { setSelected(food); setQty(parseServingGrams(food.servingSize)); setPortions(1); setFromScan(false) }}
+                    style={{ flexShrink: 0, padding: '0.6rem 0.9rem', borderRadius: '999px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', fontWeight: 600, fontSize: '0.85rem' }}>
+                    {food.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {results.map(food => (
-          <button key={food.id} onClick={() => { setSelected(food); setQty(parseServingGrams(food.servingSize)); setPortions(1) }} 
+          <button key={food.id} onClick={() => { setSelected(food); setQty(parseServingGrams(food.servingSize)); setPortions(1); setFromScan(false) }} 
             style={{
               width: '100%', padding: '1rem', borderRadius: '12px', textAlign: 'left', border: '1px solid var(--color-border)',
               backgroundColor: selected?.id === food.id ? 'var(--color-secondary)' : 'var(--color-bg-card)',
@@ -239,6 +300,16 @@ function AddFoodContent() {
           <button onClick={handleAdd} className="btn-primary" disabled={isPending}>
             {isPending ? 'Guardando...' : <><Plus size={20} /> Agregar al {mealLabel[mealType]}</>}
           </button>
+          {fromScan && (
+            <button
+              onClick={handleQuickAdd}
+              className="btn-secondary"
+              disabled={isPending}
+              style={{ marginTop: '0.5rem', width: '100%', padding: '0.8rem', borderRadius: '12px', fontWeight: 800 }}
+            >
+              ⚡ Agregar directo (1 porción)
+            </button>
+          )}
         </div>
       )}
       <div style={{ height: selected ? '260px' : '0' }} />

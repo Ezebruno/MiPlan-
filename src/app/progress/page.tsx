@@ -31,6 +31,11 @@ export default async function ProgressPage() {
       where: { userId: session.userId, date: { gte: weekAgo } },
     }),
   ])
+  const thirtyAgo = addDays(today, -29)
+  const breakfastMeals = await db.meal.findMany({
+    where: { userId: session.userId, mealType: 'breakfast', date: { gte: thirtyAgo } },
+    select: { date: true },
+  })
 
   if (!profile) redirect('/onboarding')
 
@@ -77,6 +82,18 @@ export default async function ProgressPage() {
   const maxW = Math.max(...weights.map((w) => w.weight), 0)
   const minW = Math.min(...weights.map((w) => w.weight), maxW)
 
+  // Desafío semanal: días bajo el objetivo en los últimos 7 (meta 5/7)
+  const last7Keys = new Set(Array.from({ length: 7 }, (_, i) => toDateStr(addDays(today, -i))))
+  const underDays = summaries.filter((s) => last7Keys.has(toDateStr(new Date(s.date))) && s.totalCalories > 0 && s.totalCalories <= target).length
+  const challengeGoal = 5
+  const challengeDone = underDays >= challengeGoal
+
+  // Correlaciones: desayuno vs resto (últimos 30 días)
+  const breakfastDays = new Set(breakfastMeals.map((m) => toDateStr(new Date(m.date))))
+  const withB = summaries.filter((s) => breakfastDays.has(toDateStr(new Date(s.date))) && s.totalCalories > 0)
+  const withoutB = summaries.filter((s) => !breakfastDays.has(toDateStr(new Date(s.date))) && s.totalCalories > 0)
+  const avg = (arr: typeof summaries) => (arr.length ? Math.round(arr.reduce((a, s) => a + s.totalCalories, 0) / arr.length) : 0)
+
   return (
     <main className="screen-container">
       <h1 className="title" style={{ fontSize: '1.5rem' }}>Progreso</h1>
@@ -89,6 +106,53 @@ export default async function ProgressPage() {
         <StatCard icon={<Dumbbell size={18} color="var(--color-primary)" />} value={weekExerciseMin > 0 ? `${weekExerciseMin} min` : '—'} label="Ejercicio semanal" />
         <StatCard icon={<Droplets size={18} color="var(--color-primary)" />} value={Number(avgWater) > 0 ? `${avgWater} L` : '—'} label="Agua prom/día" />
       </div>
+
+      {/* DESAFÍO SEMANAL */}
+      <div className="card" style={challengeDone ? { borderColor: 'var(--color-primary)' } : undefined}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 700 }}>Desafío: 5 días bajo objetivo 🎯</h2>
+          <span style={{ fontWeight: 800, color: challengeDone ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
+            {underDays}/{challengeGoal}
+          </span>
+        </div>
+        <div style={{ width: '100%', height: '10px', backgroundColor: 'var(--color-border)', borderRadius: '5px', overflow: 'hidden' }}>
+          <div style={{ width: `${Math.min(100, (underDays / challengeGoal) * 100)}%`, height: '100%', backgroundColor: 'var(--color-primary)', borderRadius: '5px' }} />
+        </div>
+        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
+          {challengeDone
+            ? 'Desafío cumplido. La semana que viene va de nuevo.'
+            : underDays === 0
+              ? 'Todavía no sumaste días. Hoy puede ser el primero.'
+              : streak > 0
+                ? `Venís con racha de ${streak} ${streak === 1 ? 'día' : 'días'}: no la cortes.`
+                : `Te ${challengeGoal - underDays === 1 ? 'falta 1 día' : `faltan ${challengeGoal - underDays} días`} para cumplirlo.`}
+        </div>
+      </div>
+
+      {/* TUS PATRONES */}
+      {(withB.length > 0 || withoutB.length > 0) && (
+        <div className="card">
+          <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem' }}>Tus patrones</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
+            <div>
+              🍳 Desayunaste <strong>{breakfastDays.size} de los últimos 30 días</strong>.
+              {withB.length > 0 && withoutB.length > 0 && (
+                <span> Los días con desayuno promediaste <strong>{avg(withB)} kcal</strong> vs <strong>{avg(withoutB)} kcal</strong> sin desayuno.</span>
+              )}
+            </div>
+            {weights.length > 1 && (
+              <div>
+                ⚖️ En el período registrado tu peso varió <strong>{diff > 0 ? '+' : ''}{diff.toFixed(1)} kg</strong>.
+              </div>
+            )}
+            {weekExerciseMin > 0 && (
+              <div>
+                🏃 Esta semana entrenaste <strong>{weekExerciseMin} min</strong>. Cada minuto suma a tu presupuesto.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* PESO */}
       <div className="card">

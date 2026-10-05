@@ -7,6 +7,9 @@ import DatePicker from './DatePicker'
 import MealSection from './MealSection'
 import { WaterTracker, ExerciseTracker } from './Trackers'
 import MotivationalModal from './MotivationalModal'
+import NeedsPanel from './NeedsPanel'
+import RepeatDayButton from './RepeatButtons'
+import Reminders from './Reminders'
 import { parseLocalDate, toDateStr, addDays, formatLong, todayStr } from '@/lib/dates'
 
 export const MEAL_TYPES = [
@@ -160,19 +163,34 @@ export default async function Dashboard({
         </div>
       </div>
 
+      {/* QUÉ TE FALTA */}
+      <NeedsPanel dateStr={dateStr} />
+
       {/* COMIDAS (4 por día) */}
       <div className="card">
-        <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-          Comidas del {isToday ? 'día' : formatLong(selectedDay)}
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 700 }}>
+            Comidas del {isToday ? 'día' : formatLong(selectedDay)}
+          </h2>
+          {isToday && <RepeatDayButton from={prevStr} to={dateStr} label="Repetir ayer" />}
+        </div>
         {MEAL_TYPES.map(({ id, label }) => (
           <MealSection key={id} id={id} label={label} meal={user.meals.find(m => m.mealType === id)} dateStr={dateStr} />
         ))}
+        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+          <Link href="/plato" style={{ flex: 1, textAlign: 'center', padding: '0.7rem', borderRadius: '12px', backgroundColor: 'var(--color-secondary)', color: 'var(--color-primary)', fontWeight: 700, fontSize: '0.875rem', textDecoration: 'none' }}>
+            🍽️ Armar plato
+          </Link>
+          <Link href="/plan" style={{ flex: 1, textAlign: 'center', padding: '0.7rem', borderRadius: '12px', backgroundColor: 'var(--color-secondary)', color: 'var(--color-primary)', fontWeight: 700, fontSize: '0.875rem', textDecoration: 'none' }}>
+            📅 Plan semanal
+          </Link>
+        </div>
       </div>
 
       {/* AGUA + EJERCICIO */}
       <WaterTracker initialMl={waterMl} dateStr={dateStr} />
       <ExerciseTracker logs={user.exerciseLogs} dateStr={dateStr} weightKg={weightKg} />
+      <Reminders />
 
       <div className="bottom-spacer" />
     </main>

@@ -15,6 +15,48 @@ export interface ScannedProduct {
   image?: string
 }
 
+function ean13Ok(d: string): boolean {
+  let s = 0
+  for (let i = 0; i < 12; i++) s += Number(d[i]) * (i % 2 === 0 ? 1 : 3)
+  return (10 - (s % 10)) % 10 === Number(d[12])
+}
+
+function ean8Ok(d: string): boolean {
+  let s = 0
+  for (let i = 0; i < 7; i++) s += Number(d[i]) * (i % 2 === 0 ? 3 : 1)
+  return (10 - (s % 10)) % 10 === Number(d[7])
+}
+
+function expandUpcE(raw: string): string | null {
+  let d = raw
+  if (d.length === 8) d = d.slice(0, 7)
+  else if (d.length === 6) d = '0' + d
+  if (d.length !== 7 || !/^\d+$/.test(d)) return null
+  const ns = d[0]
+  const c = d.slice(1)
+  const last = c[5]
+  let base: string
+  if (last === '0' || last === '1' || last === '2') base = ns + c.slice(0, 2) + last + '0000' + c.slice(2, 5)
+  else if (last === '3') base = ns + c.slice(0, 3) + '00000' + c.slice(3, 5)
+  else if (last === '4') base = ns + c.slice(0, 4) + '00000' + c[4]
+  else base = ns + c.slice(0, 5) + '0000' + last
+  let s = 0
+  for (let i = 0; i < 11; i++) s += Number(base[i]) * (i % 2 === 0 ? 3 : 1)
+  return base + String((10 - (s % 10)) % 10)
+}
+
+// Normaliza lo leído por cámara: solo dígitos, valida checksum EAN/UPC y
+// expande UPC-E. Devuelve null si la lectura es inválida (dígito mal leído)
+// para que el escáner siga intentando en vez de fallar con un código basura.
+export function normalizeBarcode(raw: string): string | null {
+  const digits = raw.replace(/\D/g, '')
+  if (digits.length === 13 && ean13Ok(digits)) return digits
+  if (digits.length === 12 && ean13Ok('0' + digits)) return digits
+  if (digits.length === 8 && ean8Ok(digits)) return digits
+  if (digits.length >= 6 && digits.length <= 8) return expandUpcE(digits)
+  return null
+}
+
 async function lookupBarcode(barcode: string): Promise<ScannedProduct | null> {
   const { findFoodByBarcode, saveScannedFood } = await import('./actions')
   // 1) Nuestra base primero (instantáneo, sin internet)
@@ -33,38 +75,50 @@ async function lookupBarcode(barcode: string): Promise<ScannedProduct | null> {
       }
     }
   } catch { /* sigue a Open Food Facts */ }
-  // 2) Open Food Facts
-  const res = await fetch(
-    `https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=product_name,brands,quantity,nutriments,image_front_small_url`
-  )
-  if (!res.ok) return null
-  const data = await res.json()
-  if (data.status !== 1 || !data.product) return null
-  const p = data.product
-  const n = p.nutriments ?? {}
-  const product: ScannedProduct = {
-    barcode,
-    name: p.product_name || `Producto ${barcode}`,
-    brand: p.brands || 'Escaneado',
-    servingSize: p.quantity || '100g',
-    calories: Math.round(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? 0),
-    protein: Number(n.proteins_100g ?? n.proteins ?? 0),
-    carbs: Number(n.carbohydrates_100g ?? n.carbohydrates ?? 0),
-    fat: Number(n.fat_100g ?? n.fat ?? 0),
-    image: p.image_front_small_url,
+  // 2) Open Food Facts (v2 con campos extendidos, respaldo v0 sin filtro)
+  const urls = [
+    `https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=product_name,product_name_es,generic_name,generic_name_es,brands,quantity,nutriments,image_front_small_url`,
+    `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`,
+  ]
+  for (const url of urls) {
+    let data: any
+    try {
+      const res = await fetch(url)
+      if (!res.ok) continue
+      data = await res.json()
+    } catch { continue }
+    if (data.status !== 1 || !data.product) continue
+    const p = data.product
+    const n = p.nutriments ?? {}
+    let kcal = n['energy-kcal_100g'] ?? n['energy-kcal']
+    if (kcal == null && n['energy_100g'] != null) kcal = Number(n['energy_100g']) / 4.184
+    if (kcal == null && n['energy-kj_100g'] != null) kcal = Number(n['energy-kj_100g']) / 4.184
+    if (kcal == null || isNaN(Number(kcal))) continue
+    const product: ScannedProduct = {
+      barcode,
+      name: p.product_name || p.product_name_es || p.generic_name_es || p.generic_name || `Producto ${barcode}`,
+      brand: p.brands || 'Escaneado',
+      servingSize: p.quantity || '100g',
+      calories: Math.round(Number(kcal)),
+      protein: Number(n.proteins_100g ?? n.proteins ?? 0),
+      carbs: Number(n.carbohydrates_100g ?? n.carbohydrates ?? 0),
+      fat: Number(n.fat_100g ?? n.fat ?? 0),
+      image: p.image_front_small_url,
+    }
+    // 3) Lo guarda en nuestra base para la próxima (no bloquea)
+    saveScannedFood({
+      barcode: product.barcode,
+      name: product.name,
+      brand: product.brand,
+      servingSize: product.servingSize,
+      calories: product.calories,
+      protein: product.protein,
+      carbs: product.carbs,
+      fats: product.fat,
+    }).catch(() => {})
+    return product
   }
-  // 3) Lo guarda en nuestra base para la próxima (no bloquea)
-  saveScannedFood({
-    barcode: product.barcode,
-    name: product.name,
-    brand: product.brand,
-    servingSize: product.servingSize,
-    calories: product.calories,
-    protein: product.protein,
-    carbs: product.carbs,
-    fats: product.fat,
-  }).catch(() => {})
-  return product
+  return null
 }
 
 const NATIVE_FORMATS = [
@@ -161,6 +215,34 @@ export default function BarcodeScanner({
   const [engine, setEngine] = useState<string>('iniciando…')
   const [videoSize, setVideoSize] = useState<string>('')
   const [attempts, setAttempts] = useState(0)
+  const [codeError, setCodeError] = useState<string | null>(null)
+  const stableRef = useRef<{ code: string; n: number }>({ code: '', n: 0 })
+
+  // Solo acepta una lectura cuando se repite 2 veces seguidas: elimina
+  // dígitos mal leídos (brillo, curvatura, letra chica) sin mostrar error.
+  const onDetect = (raw: string) => {
+    const code = normalizeBarcode(raw)
+    if (!code) {
+      stableRef.current = { code: '', n: 0 }
+      return
+    }
+    const st = stableRef.current
+    if (st.code === code) st.n += 1
+    else stableRef.current = { code, n: 1 }
+    if (stableRef.current.n >= 2) {
+      stableRef.current = { code: '', n: 0 }
+      handleCodeRef.current(code)
+    }
+  }
+
+  const retryScan = () => {
+    handledRef.current = false
+    stableRef.current = { code: '', n: 0 }
+    setNotFound(false)
+    setManualCode(null)
+    setLooking(null)
+    setCodeError(null)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -249,7 +331,7 @@ export default function BarcodeScanner({
               canvas.height = Math.round(rh * 2)
               ctx.drawImage(video, (vw - rw) / 2, (vh - rh) / 2, rw, rh, 0, 0, canvas.width, canvas.height)
               const codes = await detector.detect(canvas)
-              if (codes?.length) await handleCode(codes[0].rawValue)
+              if (codes?.length) onDetect(codes[0].rawValue)
             } catch { /* frame no legible */ }
           }, 500)
           return
@@ -279,7 +361,7 @@ export default function BarcodeScanner({
         const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 400 })
         readerRef.current = reader
         await reader.decodeFromVideoDevice(undefined, video, (result: any) => {
-          if (result) handleCode(result.getText())
+          if (result) onDetect(result.getText())
         })
       } catch (e: any) {
         if (!cancelled) {
@@ -332,7 +414,15 @@ export default function BarcodeScanner({
       hints.set(DecodeHintType.TRY_HARDER, true)
       const reader = new BrowserMultiFormatReader(hints)
       const result = await reader.decodeFromCanvas(canvas)
-      await handleCodeRef.current(result.getText())
+      const code = normalizeBarcode(result.getText())
+      if (!code) {
+        setLooking('no se pudo leer, acercá el código…')
+        setTimeout(() => {
+          if (!doneRef.current) setLooking(null)
+        }, 2000)
+        return
+      }
+      await handleCodeRef.current(code)
     } catch {
       setLooking(null)
       handledRef.current = false
@@ -383,8 +473,16 @@ export default function BarcodeScanner({
         </div>
       )}
       {notFound && (
-        <div style={{ color: '#FFB4B0', marginTop: '1rem', fontWeight: 600, textAlign: 'center' }}>
-          Producto no encontrado en la base. Cargalo manual:
+        <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+          <div style={{ color: '#FFB4B0', fontWeight: 600 }}>
+            Producto no encontrado en la base{manualCode ? ` (${manualCode})` : ''}. Cargalo manual:
+          </div>
+          <button
+            onClick={retryScan}
+            style={{ marginTop: '0.5rem', padding: '0.5rem 1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.4)', color: '#fff', fontWeight: 700, fontSize: '0.875rem' }}
+          >
+            Reintentar escaneo
+          </button>
         </div>
       )}
       {manualCode && (
@@ -401,7 +499,13 @@ export default function BarcodeScanner({
       <form
         onSubmit={async (e) => {
           e.preventDefault()
-          const code = new FormData(e.currentTarget).get('code')?.toString().trim()
+          const raw = new FormData(e.currentTarget).get('code')?.toString().trim() ?? ''
+          const code = normalizeBarcode(raw) ?? raw
+          if (!normalizeBarcode(raw)) {
+            setCodeError('Código inválido: verificá los dígitos e intentá de nuevo.')
+            return
+          }
+          setCodeError(null)
           if (!code || handledRef.current) return
           handledRef.current = true
           setLooking(code)
@@ -412,6 +516,7 @@ export default function BarcodeScanner({
           } else {
             setLooking(null)
             setNotFound(true)
+            setManualCode(code)
             handledRef.current = false
             setTimeout(() => setNotFound(false), 3000)
           }
@@ -428,6 +533,11 @@ export default function BarcodeScanner({
           Buscar
         </button>
       </form>
+      {codeError && (
+        <div style={{ color: '#FFB4B0', marginTop: '0.5rem', fontWeight: 600, fontSize: '0.85rem', textAlign: 'center' }}>
+          {codeError}
+        </div>
+      )}
       <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', marginTop: '0.75rem', textAlign: 'center' }}>
         Datos de Open Food Facts · La cámara necesita HTTPS o localhost
         <div style={{ marginTop: '0.25rem', opacity: 0.7 }}>
