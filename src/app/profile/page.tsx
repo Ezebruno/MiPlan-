@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { Target, Flame, Beef, Ruler, Weight, Activity } from 'lucide-react'
 import { calculateMacroTargets } from '@/lib/calculations'
 import { ONBOARDING_GOALS } from '@/lib/constants'
+import InstallApp from '@/components/InstallApp'
 
 const ACTIVITY_LABELS: Record<string, string> = {
   sedentary: 'Sedentario',
@@ -58,6 +59,8 @@ export default async function ProfilePage() {
           </form>
         </div>
       )}
+
+      <InstallApp />
 
       <form action={signOut} style={{ marginTop: '1rem' }}>
         <button type="submit" className="btn-primary" style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-error)', border: '1px solid var(--color-border)' }}>Cerrar sesión</button>
